@@ -1,0 +1,50 @@
+name: Automatic Release on Push
+on:
+  push:
+    branches:
+      - "main"
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    steps:      
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'      
+      - name: Generate .love file
+        run: zip -9 -r pingpong.love . -x '*.git*' -x '*.vscode*' -x '*.github*'
+      - uses: suisei-cn/actions-download-file@v1
+        id: lovebins
+        name: Download Love2D Binaries for windows
+        with:
+          url: "https://github.com/love2d/love/releases/download/11.3/love-11.3-win64.zip"                
+      - name: Generating Binaries for windows
+        run: |
+          unzip love-11.3-win64
+          mv pingpong.love love-11.3-win64
+          cat love-11.3-win64/love.exe love-11.3-win64/pingpong.love > love-11.3-win64/pingpong.exe
+          mv love-11.3-win64/ win64/
+          rm -rf win64/*.ico
+          rm -rf win64/lov*.exe          
+          rm -rf win64/*.ico      
+          rm -rf win64/*.love      
+      - name: Bump version and push tag
+        id: tag_bump
+        uses: anothrNick/github-tag-action@1.26.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_BRANCHES: main
+          INITIAL_VERSION: 1.0.0
+          WITH_V: true
+      - name: Archive binaries for windows
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.tag_bump.outputs.new_tag }}-win64
+          path: win64
+          retention-days: 5
+      - uses: meeDamian/github-release@2.0
+        name: Updating Release with artifact
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.tag_bump.outputs.new_tag }}
+          files: >            
+            ${{ steps.tag_bump.outputs.new_tag }}-win64:win64/
