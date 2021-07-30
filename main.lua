@@ -1,10 +1,7 @@
-push = require 'push'
-Class = require 'class'
-
-log = require 'log'
-require 'Paddle'
-require 'Ball'
-require 'UI'
+push = require 'lib/push'
+require 'src/Paddle'
+require 'src/Ball'
+require 'src/UI'
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -22,7 +19,7 @@ function love.load()
     love.window.setTitle('Pong by Paulo')
     math.randomseed(os.time())
 
-    ui = UI('PressStart2P-Regular.ttf',8, 16, 24)
+    ui = UI('fonts/PressStart2P-Regular.ttf',8, 16, 24)
 
     player1 = Paddle(10, 30, 5, 20)
     player2 = Paddle(VIRTUAL_WIDTH - 10, 30, 5, 20)
