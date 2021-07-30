@@ -47,7 +47,7 @@ end
 
 function Paddle:toString()
     local s = "Paddle["
-    for key, value in pairs(ball) do
+    for key, value in pairs(self) do
         s = s..key..":"..value..", "
     end
     s = string.sub(s,0,string.len(s)-2).."]"
