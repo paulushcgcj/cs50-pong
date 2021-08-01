@@ -13,20 +13,37 @@ jobs:
       - name: Generate .love file
         run: zip -9 -r pingpong.love . -x '*.git*' -x '*.vscode*' -x '*.github*'
       - uses: suisei-cn/actions-download-file@v1
-        id: lovebins
+        id: lovebinswin64
         name: Download Love2D Binaries for windows
         with:
           url: "https://github.com/love2d/love/releases/download/11.3/love-11.3-win64.zip"                
-      - name: Generating Binaries for windows
+      - name: Generating Binaries for win64
         run: |
           unzip love-11.3-win64
-          mv pingpong.love love-11.3-win64
+          cp pingpong.love love-11.3-win64
           cat love-11.3-win64/love.exe love-11.3-win64/pingpong.love > love-11.3-win64/pingpong.exe
           mv love-11.3-win64/ win64/
           rm -rf win64/*.ico
           rm -rf win64/lov*.exe          
           rm -rf win64/*.ico      
-          rm -rf win64/*.love      
+          rm -rf win64/*.love
+      - uses: suisei-cn/actions-download-file@v1
+        id: lovebinsmacos
+        name: Download Love2D Binaries for mac
+        with:
+          url: "https://github.com/love2d/love/releases/download/11.3/love-11.3-macos.zip"                
+      - name: Generating Binaries for macos
+        run: |
+          unzip love-11.3-macos
+          mv love.app pingpong.app
+          cp pingpong.love pingpong.app/Contents/Resources/pingpong.love
+          sed -i 's/<string>org\.love2d\.love<\/string>/<string>io\.github\.paulushcgcj\.pingpong<\/string>/' pingpong.app/Contents/Info.plist
+          sed -i 's/<string>LÖVE<\/string>/<string>Pong by Paulo<\/string>/' pingpong.app/Contents/Info.plist
+          head -n 103 pingpong.app/Contents/Info.plist >> pingpong.app/Contents/Info.plist.bkp
+          tail -n 2 pingpong.app/Contents/Info.plist >> pingpong.app/Contents/Info.plist.bkp
+          rm -rf pingpong.app/Contents/Info.plist
+          mv pingpong.app/Contents/Info.plist.bkp pingpong.app/Contents/Info.plist
+          zip -r -y pingpong.dmg pingpong.app
       - name: Bump version and push tag
         id: tag_bump
         uses: anothrNick/github-tag-action@1.26.0
@@ -34,13 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_BRANCHES: main
           INITIAL_VERSION: 1.0.0
-          WITH_V: true
-      - name: Archive binaries for windows
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ steps.tag_bump.outputs.new_tag }}-win64
-          path: win64
-          retention-days: 5
+          WITH_V: true      
       - uses: meeDamian/github-release@2.0
         name: Updating Release with artifact
         with:
@@ -48,3 +59,4 @@ jobs:
           tag: ${{ steps.tag_bump.outputs.new_tag }}
           files: >            
             ${{ steps.tag_bump.outputs.new_tag }}-win64:win64/
+            ${{ steps.tag_bump.outputs.new_tag }}-macos.dmg:pingpong.dmg
